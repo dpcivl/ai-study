@@ -2,3 +2,6 @@
 venv/
 __pycache__/
 *.pyc
+learning_notes
+chroma_db
+chroma.db/**
