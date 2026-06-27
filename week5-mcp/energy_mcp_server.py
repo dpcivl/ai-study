@@ -200,5 +200,87 @@ def get_line_status(line_id: str) -> str:
     return result
 
 
+# ===== 도구 5: 일별 요약 =====
+@mcp.tool()
+def get_daily_summary(date: str = "today") -> str:
+    """
+    특정 날짜의 전체 공장 에너지 요약을 반환합니다. 
+    
+    Args:
+        date: 날짜 (예: "today", "yesterday", "2026-06-26")
+    
+    Returns:
+        일별 요약 정보
+    """
+    # 가짜 요약 생성
+    total_power = sum(FAKE_LINES[lid]["rated_power_kw"] for lid in FAKE_LINES) * 0.85
+
+    return (
+        f"공장 일별 요약 ({date}):\n"
+        f"- 총 라인 수: {len(FAKE_LINES)}\n"
+        f"- 총 사용 전력: {total_power:.1f}kW\n"
+        f"- 평균 가동률: 85%\n"
+        f"- 알람 발생: {len(FAKE_ALARMS)}건\n"
+    )
+
+
+# ===== 도구 6: 라인 비교 =====
+@mcp.tool()
+def compare_lines(line_id_1: str, line_id_2: str) -> str:
+    """
+    두 라인의 전력 사용 효율을 비교합니다. 
+    
+    Args:
+        line_id_1: 첫 번째 라인 ID
+        line_id_2: 두 번째 라인 ID
+        
+    Returns:
+        비교 분석 결과
+    """
+    if line_id_1 not in FAKE_LINES or line_id_2 not in FAKE_LINES:
+        return "오류: 알 수 없는 라인 ID"
+    
+    info1 = FAKE_LINES[line_id_1]
+    info2 = FAKE_LINES[line_id_2]
+
+    return (
+        f"라인 비교: {info1['name']} vs {info2['name']}\n"
+        f"\n{line_id_1}:\n"
+        f"  - 정격 전력: {info1['rated_power_kw']}kW\n"
+        f"\n{line_id_2}:\n"
+        f"  - 정격 전력: {info2['rated_power_kw']}kW\n"
+        f"\n정격 차이: {abs(info1['rated_power_kw'] - info2['rated_power_kw'])}kW"
+    )
+
+
+# ===== 도구 7: 에너지 비용 계산
+@mcp.tool()
+def calculate_energy_cost(line_id: str, hours: int = 24, kwh_price: float = 100.0) -> str:
+    """
+    특정 라인의 에너지 비용을 계산합니다. 
+    
+    Args:
+        line_id: 라인 ID
+        hours: 계산할 시간 (기본 24시간)
+        kwh_price: kWh당 원 (기본 100원)
+    
+    Returns:
+        에너지 비용 계산 결과
+    """
+    if line_id not in FAKE_LINES:
+        return f"오류: 알 수 없는 라인 '{line_id}'"
+    
+    data = generate_fake_consumption(line_id, hours)
+    total_kwh = sum(d['power_kw'] for d in data)    # 시간당 kW x 시간 = kWh
+    total_cost = total_kwh * kwh_price
+
+    return (
+        f"{FAKE_LINES[line_id]['name']} 에너지 비용:\n"
+        f"- 기간: 최근 {hours}시간\n"
+        f"- 사용량: {total_kwh:.1f}kWh\n"
+        f"- 단가: {kwh_price}원/kWh\n"
+        f"- 총 비용: {total_cost:,.0f}원"
+    )
+
 if __name__ == "__main__":
     mcp.run()
